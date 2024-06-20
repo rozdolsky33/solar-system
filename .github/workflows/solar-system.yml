@@ -6,10 +6,24 @@ on:
     branches:
       - main
       - 'feature/*'
-    
+      -
+env:
+  MONGO_URI: ${{ secret.MONGO_URI }}
+  MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
+  MONGO_PASSWORD: ${{ secret.MONGO_PASSWORD }}
+
 jobs:
     unit-testing:
         name: Unit Testing
+#        strategy:
+#          matrix:
+#            nodejs_version: [18, 19, 20]
+#            operating_system: [ubuntu-latest, macos-latest]
+#            exclude:
+#              - nodejs_version: 18
+#                operating_system: macos-lates
+#
+#        runs-on: ${{ matrix.operating_system }}
         runs-on: ubuntu-latest
         steps:
         - name: Checkout Repository
