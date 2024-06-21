@@ -8,7 +8,7 @@ on:
       - 'feature/*'
       - 'feature-*'
 env:
-  MONGO_URI: ${{ secret.MONGO_DB_URI }}
+  MONGO_URI: ${{ secrets.MONGO_DB_URI }}
 
 jobs:
     unit-testing:
