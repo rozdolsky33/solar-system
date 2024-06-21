@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const app = express();
 const cors = require('cors')
 
-const uri = process.env.MONGO_DB_URI;
+const uri = process.env.MONGO_URI;
 
 const clientOptions = {
     serverApi: {

@@ -7,8 +7,6 @@ on:
       - main
       - 'feature/*'
       - 'feature-*'
-env:
-  MONGO_URI: ${{ secrets.MONGO_DB_URI }}
 
 jobs:
     unit-testing:
@@ -36,6 +34,8 @@ jobs:
           run: npm install
     
         - name: Unit Testing
+          env:
+            MONGO_URI: ${{ secrets.MONGO_DB_URI }}
           run: npm test
           
         - name: Archive Test Result
