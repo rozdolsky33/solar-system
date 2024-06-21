@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const app = express();
 const cors = require('cors')
 
-const uri = process.env.MONGO_URI;
+const uri = "mongodb+srv://donkeyhourse:Welcome12345@solarsystemgithub.ra689cj.mongodb.net/?retryWrites=true&w=majority&appName=SolarSystemGithub";
 
 const clientOptions = {
     serverApi: {
