@@ -35,3 +35,13 @@ jobs:
           with:
             name: Mocha-Test-Result
             path: test-results.xml
+
+        - name: Check Code Coverage
+          run: npm run coverage
+
+        - name: Archive Test Coverage
+          uses: actions/upload-artifact@v3
+          with:
+            name: Code-Coverage-Result
+            path: coverage
+            retention-days: 5
