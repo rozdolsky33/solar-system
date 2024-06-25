@@ -166,7 +166,6 @@ jobs:
             echo "------------------------------------------------------"
             kubectl get nodes
       
-            
 
         - name: Replace Token in Manifest file
           uses: cschleiden/replace-tokens@v1
@@ -184,3 +183,7 @@ jobs:
         - name: Check files
           run: |
             cat kubernetes/development/*.yaml
+
+        - name: Check files
+          run: |
+            kubectl apply -f kubernetes/development/
