@@ -178,7 +178,7 @@ jobs:
             NAMESPACE: ${{ vars.NAMESPACE }}
             REPLICAS: ${{ vars.REPLICAS }}
             IMAGES: ${{ secrets.DOCKERHUB_USERNAME }}/solar-systems:${{ github.sha }}
-            INGRESS_IP: ${{ env.INGRESS_IP }}
+            INGRESS_IP: ${{ vars.INGRESS_IP }}
 
 
         - name: Check files
