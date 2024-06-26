@@ -223,7 +223,7 @@ jobs:
 
     prod-deploy:
       environment:
-        name: dev
+        name: production
         url: https://${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
       needs: docker
       outputs:
@@ -256,7 +256,7 @@ jobs:
           with:
             tokenPrefix: '_{_'
             tokenSuffix: '_}_'
-            files: '["kubernetes/development/*.yaml"]'
+            files: '["kubernetes/production/*.yaml"]'
           env:
             NAMESPACE: ${{ vars.NAMESPACE }}
             REPLICAS: ${{ vars.REPLICAS }}
@@ -266,7 +266,7 @@ jobs:
 
         - name: Check files
           run: |
-            cat kubernetes/development/*.yaml
+            cat kubernetes/production/*.yaml
 
         - name: Create MongoDB Secret
           run: |
@@ -278,9 +278,9 @@ jobs:
             --dry-run=client \
             -o yaml | kubectl apply -f -
 
-        - name: Deploy to Dev Env
+        - name: Deploy to Prod Env
           run: |
-            kubectl apply -f kubernetes/development/
+            kubectl apply -f kubernetes/production/
 
         - name: Set App Ingress Host URL
           id: set-ingress-host-address
@@ -288,13 +288,13 @@ jobs:
             echo "APP_INGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath="{.items[0].spec.tls[0].hosts[0]}")" >> "$GITHUB_OUTPUT"
 
     prod-integration-test:
-      name: Dev Integration Testing
-      needs: dev-deploy
+      name: Prod Integration Testing
+      needs: prod-deploy
       runs-on: ubuntu-latest
       steps:
         - name: Test URL Output using CURL and JQ
           env:
-            URL: ${{ needs.dev-deploy.outputs.APP_INGRESS_URL }}
+            URL: ${{ needs.prod-deploy.outputs.APP_INGRESS_URL }}
           run: |
             echo $URL
             echo "-----------------------------------------"
