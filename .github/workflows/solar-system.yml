@@ -143,6 +143,9 @@ jobs:
     
 
     dev-deploy:
+      environment:
+        name: dev
+        url: https://${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
       needs: docker
       outputs:
         APP_INGRESS_URL: ${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
