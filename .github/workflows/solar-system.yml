@@ -34,14 +34,10 @@ jobs:
           with:
             node-version: 20
 
-        - name: Cache NPM dependencies
-          uses: actions/cache@v3
+        - name: Composite Action - Cache Install NPM Packages
+          uses: ./.github/custom-action/npm-action/action.yml
           with:
-            path: node_modules
-            key: ${{ runner.os }}-node-modules${{ hashFiles('package-lock.json') }}
-
-        - name: Install Dependencies
-          run: npm install && npm audit fix
+            path-of-folder: node_modules # can provide as input/var/secret
 
         - name: Unit Testing
           id: nodejs-unit-testing-step
@@ -66,14 +62,10 @@ jobs:
           with:
             node-version: 20
 
-        - name: Cache NPM dependencies
-          uses: actions/cache@v3
+        - name: Composite Action - Cache Install NPM Packages
+          uses: ./.github/custom-action/npm-action/action.yml
           with:
-            path: node_modules
-            key: ${{ runner.os }}-node-modules${{ hashFiles('package-lock.json') }}
-
-        - name: Install Dependencies
-          run: npm install && npm audit fix
+            path-of-folder: node_modules # can provide as input/var/secret
 
         - name: Check Code Coverage
           continue-on-error: true
