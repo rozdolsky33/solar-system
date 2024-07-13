@@ -35,7 +35,7 @@ jobs:
             node-version: 20
 
         - name: Composite Action - Cache Install NPM Packages
-          uses: ./.github/custom-action/npm-action/action.yml
+          uses: ./.github/custom-action/npm-action
           with:
             path-of-folder: node_modules # can provide as input/var/secret
 
@@ -63,7 +63,7 @@ jobs:
             node-version: 20
 
         - name: Composite Action - Cache Install NPM Packages
-          uses: ./.github/custom-action/npm-action/action.yml
+          uses: ./.github/custom-action/npm-action
           with:
             path-of-folder: node_modules # can provide as input/var/secret
 
