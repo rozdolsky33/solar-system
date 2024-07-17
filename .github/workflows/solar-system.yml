@@ -137,9 +137,9 @@ jobs:
       needs: docker
       uses: ./.github/workflows/reuse-deployment.yml
       secrets:
-        k8s-kubeconfig: ${{ secrts.KUBECONFIG }}
-        mongodb-password: ${{ secrts.MONGO_PASSWORD }}
-        dockerhub-username: ${{ secrts.DOCKERHUB_USERNAME }}
+        k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
+        mongodb-password: ${{ secrets.MONGO_PASSWORD }}
+        dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
 
 
 
@@ -162,6 +162,10 @@ jobs:
       if: github.ref == 'refs/heads/main'
       needs: docker
       uses: ./.github/workflows/reuse-deployment.yml
+      secrets:
+        k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
+        mongodb-password: ${{ secrets.MONGO_PASSWORD }}
+        dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
 
 
     prod-integration-test:
