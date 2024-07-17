@@ -12,6 +12,7 @@ env:
   MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
   MONGO_URI: ${{ vars.MONGO_URI }}
 jobs:
+  #---------------------------------------------------- Unit Testing -------------------------------------------------------------------------------------------------------
     unit-testing:
         name: Unit Testing
         runs-on: ubuntu-latest
@@ -50,6 +51,7 @@ jobs:
             name: Mocha-Test-Result
             path: test-results.xml
 
+  #---------------------------------------------------- Code Coverage ------------------------------------------------------------------------------------------------------
     code-coverage:
       name: Code Coverage
       runs-on: ubuntu-latest
@@ -77,6 +79,35 @@ jobs:
             name: Code-Coverage-Result
             path: coverage
             retention-days: 5
+
+    report-s3:
+      needs: [code-coverage, unit-testing]
+      name: AWS S3 - Upload Reports
+      runs-on: ubuntu-latest
+      continue-on-error: true
+      steps:
+        - name: Download Mocha Test Artifact
+          uses: actions/download-artifact@v4
+          with:
+            name: Mocha-Test-Result
+
+        - name: Download Mocha Test Artifact
+          uses: actions/download-artifact@v4
+          with:
+            name: Code-Coverage-Result
+
+        - name: Merge Test Files
+          run: |
+            ls -ltr
+            mkdir reports-${{ github.sha }}
+            mv cobertura-coverage.xml reports-${{ github.sha }}/
+            mv test-results.xml reports-${{ github.sha }}/
+            ls -ltr reports-${{ github.sha }}/
+
+        - name: Upload to AWS S3
+          run: echo "uploading...."
+
+  #---------------------------------------------------- Build and Push Docker Image ------------------------------------------------------------------------------------------
     docker:
       name: Containerization
       needs: [unit-testing, code-coverage]
@@ -132,7 +163,7 @@ jobs:
               ${{ secrets.DOCKERHUB_USERNAME }}/solar-systems:${{ github.sha }}
               ghcr.io/${{ github.repository_owner }}/solar-systems:${{ github.sha }}
 
-
+#---------------------------------------------------- Deploy to DEVELOPMENT ------------------------------------------------------------------------------------------------
     dev-deploy:
       if: contains(github.ref, 'feature-')
       needs: docker
@@ -145,7 +176,8 @@ jobs:
         mongodb-url: ${{ vars.MONGO_URI }}
         environment: dev
         k8s-manifest-dir: kubernetes/development/
-  #---------------------------------------------------- DEVELOPMENT --------------------------------------------------------------------------------------------------
+
+#---------------------------------------------------- Development Smoke Testing --------------------------------------------------------------------------------------------
     dev-integration-test:
       if: contains(github.ref, 'feature-')
       name: Dev Integration Testing
@@ -160,7 +192,7 @@ jobs:
             echo "-----------------------------------------"
             curl https://$URL/live -s -k | jq -r .status | grep -i live
 
-#---------------------------------------------------- PRODUCTION -----------------------------------------------------------------------------------------------------
+#---------------------------------------------------- Deploy to PRODUCTION --------------------------------------------------------------------------------------------------
     prod-deploy:
       if: github.ref == 'refs/heads/main'
       needs: docker
@@ -174,6 +206,7 @@ jobs:
         environment: production
         k8s-manifest-dir: kubernetes/production/
 
+#---------------------------------------------------- Production Smoke Testing ----------------------------------------------------------------------------------------------
     prod-integration-test:
       if: github.ref == 'refs/heads/main'
       name: Prod Integration Testing
