@@ -140,6 +140,11 @@ jobs:
         k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
         mongodb-password: ${{ secrets.MONGO_PASSWORD }}
         dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+      with:
+        mongodb-url: ${{ vars.MONGO_URI }}
+        environment: dev
+        k8s-manifest-dir: kubernetes/development
+
 
 
 
@@ -166,7 +171,10 @@ jobs:
         k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
         mongodb-password: ${{ secrets.MONGO_PASSWORD }}
         dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
-
+      with:
+        mongodb-url: ${{ vars.MONGO_URI }}
+        environment: production
+        k8s-manifest-dir: kubernetes/production
 
     prod-integration-test:
       if: github.ref == 'refs/heads/main'
