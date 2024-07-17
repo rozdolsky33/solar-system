@@ -132,73 +132,20 @@ jobs:
               ${{ secrets.DOCKERHUB_USERNAME }}/solar-systems:${{ github.sha }}
               ghcr.io/${{ github.repository_owner }}/solar-systems:${{ github.sha }}
 
+
     dev-deploy:
       if: contains(github.ref, 'feature-')
-      environment:
-        name: dev
-        url: https://${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
       needs: docker
-      outputs:
-        APP_INGRESS_URL: ${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
-
-        - name: Install kubectl CLI
-          uses: azure/setup-kubectl@v3
-          with:
-            version: 'v1.27.0'
-
-        - name: Set Kubeconfig file
-          uses: azure/k8s-set-context@v4
-          with:
-            method: kubeconfig
-            kubeconfig: ${{ secrets.KUBECONFIG }}
-
-        - name: Fetch Kubernetes Cluster Details
-          run: |
-            kubectl version --short
-            echo "------------------------------------------------------"
-            kubectl get nodes
-      
-
-        - name: Replace Token in Manifest file
-          uses: cschleiden/replace-tokens@v1
-          with:
-            tokenPrefix: '_{_'
-            tokenSuffix: '_}_'
-            files: '["kubernetes/development/*.yaml"]'
-          env:
-            NAMESPACE: ${{ vars.NAMESPACE }}
-            REPLICAS: ${{ vars.REPLICAS }}
-            IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/solar-systems:${{ github.sha }}
-            INGRESS_IP: ${{ vars.INGRESS_IP }}
-
-
-        - name: Check files
-          run: |
-            cat kubernetes/development/*.yaml
-
-        - name: Create MongoDB Secret
-          run: |
-            kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
-            --from-literal=MONGO_URI=${{ vars.MONGO_URI }} \
-            --from-literal=MONGO_USERNAME=${{ vars.MONGO_USERNAME }} \
-            --from-literal=MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }} \
-            --save-config \
-            --dry-run=client \
-            -o yaml | kubectl apply -f -
-
-        - name: Deploy to Dev Env
-          run: |
-            kubectl apply -f kubernetes/development/
-
-        - name: Set App Ingress Host URL
-          id: set-ingress-host-address
-          run: |
-            echo "APP_INGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath="{.items[0].spec.tls[0].hosts[0]}")" >> "$GITHUB_OUTPUT"
-
+      uses: ./.github/workflows/reuse-deployment.yml
+      secrets:
+        k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
+        mongodb-password: ${{ secrets.MONGO_PASSWORD }}
+        dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+      with:
+        mongodb-url: ${{ vars.MONGO_URI }}
+        environment: dev
+        k8s-manifest-dir: kubernetes/development/
+  #---------------------------------------------------- DEVELOPMENT --------------------------------------------------------------------------------------------------
     dev-integration-test:
       if: contains(github.ref, 'feature-')
       name: Dev Integration Testing
@@ -207,7 +154,7 @@ jobs:
       steps:
         - name: Test URL Output using CURL and JQ
           env:
-            URL: ${{ needs.dev-deploy.outputs.APP_INGRESS_URL }}
+            URL: ${{ needs.dev-deploy.outputs.application-url }}
           run: |
             echo $URL
             echo "-----------------------------------------"
@@ -216,70 +163,16 @@ jobs:
 #---------------------------------------------------- PRODUCTION -----------------------------------------------------------------------------------------------------
     prod-deploy:
       if: github.ref == 'refs/heads/main'
-      environment:
-        name: production
-        url: https://${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
       needs: docker
-      outputs:
-        APP_INGRESS_URL: ${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
-
-        - name: Install kubectl CLI
-          uses: azure/setup-kubectl@v3
-          with:
-            version: 'v1.27.0'
-
-        - name: Set Kubeconfig file
-          uses: azure/k8s-set-context@v4
-          with:
-            method: kubeconfig
-            kubeconfig: ${{ secrets.KUBECONFIG }}
-
-        - name: Fetch Kubernetes Cluster Details
-          run: |
-            kubectl version --short
-            echo "------------------------------------------------------"
-            kubectl get nodes
-
-
-        - name: Replace Token in Manifest file
-          uses: cschleiden/replace-tokens@v1
-          with:
-            tokenPrefix: '_{_'
-            tokenSuffix: '_}_'
-            files: '["kubernetes/production/*.yaml"]'
-          env:
-            NAMESPACE: ${{ vars.NAMESPACE }}
-            REPLICAS: ${{ vars.REPLICAS }}
-            IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/solar-systems:${{ github.sha }}
-            INGRESS_IP: ${{ vars.INGRESS_IP }}
-
-
-        - name: Check files
-          run: |
-            cat kubernetes/production/*.yaml
-
-        - name: Create MongoDB Secret
-          run: |
-            kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
-            --from-literal=MONGO_URI=${{ vars.MONGO_URI }} \
-            --from-literal=MONGO_USERNAME=${{ vars.MONGO_USERNAME }} \
-            --from-literal=MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }} \
-            --save-config \
-            --dry-run=client \
-            -o yaml | kubectl apply -f -
-
-        - name: Deploy to Prod Env
-          run: |
-            kubectl apply -f kubernetes/production/
-
-        - name: Set App Ingress Host URL
-          id: set-ingress-host-address
-          run: |
-            echo "APP_INGRESS_HOST=$(kubectl -n ${{ vars.NAMESPACE }} get ingress -o jsonpath="{.items[0].spec.tls[0].hosts[0]}")" >> "$GITHUB_OUTPUT"
+      uses: ./.github/workflows/reuse-deployment.yml
+      secrets:
+        k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
+        mongodb-password: ${{ secrets.MONGO_PASSWORD }}
+        dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+      with:
+        mongodb-url: ${{ vars.MONGO_URI }}
+        environment: production
+        k8s-manifest-dir: kubernetes/production/
 
     prod-integration-test:
       if: github.ref == 'refs/heads/main'
@@ -289,11 +182,8 @@ jobs:
       steps:
         - name: Test URL Output using CURL and JQ
           env:
-            URL: ${{ needs.prod-deploy.outputs.APP_INGRESS_URL }}
+            URL: ${{ needs.prod-deploy.outputs.application-url }}
           run: |
             echo $URL
             echo "-----------------------------------------"
             curl https://$URL/live -s -k | jq -r .status | grep -i live
-        
-          
-       
