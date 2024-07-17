@@ -145,9 +145,6 @@ jobs:
         environment: dev
         k8s-manifest-dir: kubernetes/development
 
-
-
-
     dev-integration-test:
       if: contains(github.ref, 'feature-')
       name: Dev Integration Testing
@@ -156,7 +153,7 @@ jobs:
       steps:
         - name: Test URL Output using CURL and JQ
           env:
-            URL: ${{ needs.dev-deploy.outputs.APP_INGRESS_URL }}
+            URL: ${{ needs.dev-deploy.outputs.application-url }}
           run: |
             echo $URL
             echo "-----------------------------------------"
@@ -184,7 +181,7 @@ jobs:
       steps:
         - name: Test URL Output using CURL and JQ
           env:
-            URL: ${{ needs.prod-deploy.outputs.APP_INGRESS_URL }}
+            URL: ${{ needs.prod-deploy.outputs.application-url }}
           run: |
             echo $URL
             echo "-----------------------------------------"
